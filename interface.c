@@ -51,3 +51,16 @@ g_signal_connect(buttonAdd, "clicked", G_CALLBACK(on_buttons_operations), entry)
 g_signal_connect(buttonSub, "clicked", G_CALLBACK(on_buttons_operations), entry);
 g_signal_connect(buttonDiv, "clicked", G_CALLBACK(on_buttons_operations), entry);
 g_signal_connect(buttonMul, "clicked", G_CALLBACK(on_buttons_operations), entry);
+
+
+void on_buttons_operations(GtkWidget *widget, gpointer data){
+    GtkEntry *entry = GTK_ENTRY(data);
+    const gchar *label = gtk_button_get_label(GTK_BUTTON(widget));
+    const gchar *current = gtk_entry_get_text(entry);
+    int current_len = sizeof(current) / sizeof(current[0]);
+    if(current[current_len - 1] !== "+" || current[current_len - 1] !== "-" || current[current_len - 1] !== "*" || current[current_len - 1] !== "/"){
+          gchar  *new_text = gstrconcat(current, label, NULL);
+          gtk_entry_set_text(entry, new_text);
+          g_free(new_text);
+    }
+}
