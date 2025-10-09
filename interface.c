@@ -1,42 +1,7 @@
 #include <gtk/gtk.h>
 #include "operations.h"
 #include "string.h"
-
-GtkWidget *buttons_numbers[10];
-for (int i = 0; i < 10; i++) {
-    char label[2];
-    snprintf(label, sizeof(label), "%d", i); 
-    buttons_numbers[i] = gtk_button_new_with_label(label);
-};
-GtkWidget *buttonEquals = gtk_button_new_with_label("=");
-GtkWidget *buttonAdd = gtk_button_new_with_label("+");
-GtkWidget *buttonSub = gtk_button_new_with_label("-");
-GtkWidget *buttonDiv = gtk_button_new_with_label("/");
-GtkWidget *buttonMul = gtk_button_new_with_label("*");
-GtkWidget *buttonClean = gtk_button_new_with_label("C");
-
-int row = 1;
-int col = 0;
-
-for(int i = 0; i =< 9; i++){
-    gtk_grid_attach(GTK_GRID(grid), buttons_numbers[i], col, row, 1, 1);
-    col++;
-    if(col == 4){
-        col = 0;
-        row++;
-    }
-};
-gtk_grid_attach(GTK_GRID(grid), digit_buttons[0], 1, row, 1, 1);
-gtk_grid_attach(GTK_GRID(grid), buttonEquals, 0, 3, 1, 1);
-gtk_grid_attach(GTK_GRID(grid), buttonAdd, 1, 3, 1, 1);
-gtk_grid_attach(GTK_GRID(grid), buttonSub, 2, 3, 1, 1);
-gtk_grid_attach(GTK_GRID(grid), buttonDiv, 3, 3, 1, 1);
-gtk_grid_attach(GTK_GRID(grid), buttonMul, 4, 3, 1, 1);
-gtk_grid_attach(GTK_GRID(grid), buttonClean, 5, 3, 1, 1);
-
-for(int i = 0; i =< 10; i++){
-    g_signal_connect(buttons_numbers[i], "clicked", G_CALLBACK(on_buttons_numbers), entry);
-};
+#include <stdlib.h>
 
 void on_buttons_numbers(GtkWidget *widget, gpointer data){
     GtkEntry *entry = GTK_ENTRY(data);
@@ -45,14 +10,7 @@ void on_buttons_numbers(GtkWidget *widget, gpointer data){
     gchar *new_text = g_strconcat(current, label, NULL);
     gtk_entry_set_text(entry, new_text);
     g_free(new_text);
-
 }
-
-g_signal_connect(buttonAdd, "clicked", G_CALLBACK(on_buttons_operations), entry);
-g_signal_connect(buttonSub, "clicked", G_CALLBACK(on_buttons_operations), entry);
-g_signal_connect(buttonDiv, "clicked", G_CALLBACK(on_buttons_operations), entry);
-g_signal_connect(buttonMul, "clicked", G_CALLBACK(on_buttons_operations), entry);
-
 
 void on_buttons_operations(GtkWidget *widget, gpointer data){
     GtkEntry *entry = GTK_ENTRY(data);
@@ -66,21 +24,18 @@ void on_buttons_operations(GtkWidget *widget, gpointer data){
     }
 }
 
-g_signal_connect(buttonClean, "clicked", G_CALLBACK(on_button_clean), entry);
-
-void on_button_clean(GtkWidget *widget, gpointer data){
+void on_button_clear(GtkWidget *widget, gpointer data){
     GtkEntry *entry = GTK_ENTRY(data);
     gtk_entry_set_text(entry, "");
 }
 
-g_signal_connect(buttonEquals, "clicked", G_CALLBACK(on_button_equals), entry);
-
 void on_button_equals(GtkWidget *widget, gpointer data){
     GtkEntry *entry = GTK_ENTRY(data);
     const gchar *current = gtk_entry_get_text(entry);
-    char op[4] = { '+', "-", "/", "*"};
-    int 
-    for(int i = 0; i < 4; i++){
+    char op[4] = { '+', '-', '/', '*'};
+    int i;
+    
+    for(i = 0; i < 4; i++){
         char x = op[i];
         char *pos = strchr(current, x);
         if(pos){
@@ -89,8 +44,8 @@ void on_button_equals(GtkWidget *widget, gpointer data){
             strncpy(left, current, op_index);
             left[op_index] = '\0';
             const char *right = pos + 1;
-            double a = atoi(left);
-            double b = atoi(right);
+            double a = atof(left);
+            double b = atof(right);
             double result;
             switch (x)
             {
@@ -114,8 +69,65 @@ void on_button_equals(GtkWidget *widget, gpointer data){
                 break;
             }
             char result_str[32];
-            sprintf(result_str, "%d", result);
+            sprintf(result_str, "%.2f", result);
             gtk_entry_set_text(entry, result_str);
+            break;
         }
     }
+}
+
+void activate(GtkApplication *app, gpointer user_data) {
+    GtkWidget *window;
+    GtkWidget *grid;
+    GtkWidget *entry;
+    GtkWidget *buttonAdd, *buttonSub, *buttonMul, *buttonDiv, *buttonClear, *buttonEquals;
+
+    window = gtk_application_window_new(app);
+    gtk_window_set_title(GTK_WINDOW(window), "GTK Calculator");
+    gtk_window_set_default_size(GTK_WINDOW(window), 250, 300);
+
+    grid = gtk_grid_new();
+    gtk_container_add(GTK_CONTAINER(window), grid);
+
+    entry = gtk_entry_new();
+    gtk_grid_attach(GTK_GRID(grid), entry, 0, 0, 4, 1);
+
+    const char *labels[] = {
+        "7", "8", "9", "+",
+        "4", "5", "6", "-",
+        "1", "2", "3", "*",
+        "C", "0", "=", "/"
+    };
+
+    for (int i = 0; i < 16; i++) {
+        GtkWidget *button = gtk_button_new_with_label(labels[i]);
+        gtk_grid_attach(GTK_GRID(grid), button, i % 4, 1 + i / 4, 1, 1);
+
+        if (g_strcmp0(labels[i], "+") == 0) {
+            buttonAdd = button;
+        } else if (g_strcmp0(labels[i], "-") == 0) {
+            buttonSub = button;
+        } else if (g_strcmp0(labels[i], "*") == 0) {
+            buttonMul = button;
+        } else if (g_strcmp0(labels[i], "/") == 0) {
+            buttonDiv = button;
+        } else if (g_strcmp0(labels[i], "C") == 0) {
+            buttonClear = button;
+        } else if (g_strcmp0(labels[i], "=") == 0) {
+            buttonEquals = button;
+        }
+
+        if (g_strcmp0(labels[i], "=") == 0) {
+            g_signal_connect(button, "clicked", G_CALLBACK(on_button_equals), entry);
+        } else if (g_strcmp0(labels[i], "C") == 0) {
+            g_signal_connect(button, "clicked", G_CALLBACK(on_button_clear), entry);
+        } else if (g_strcmp0(labels[i], "+") == 0 || g_strcmp0(labels[i], "-") == 0 || 
+                   g_strcmp0(labels[i], "*") == 0 || g_strcmp0(labels[i], "/") == 0) {
+            g_signal_connect(button, "clicked", G_CALLBACK(on_buttons_operations), entry);
+        } else {
+            g_signal_connect(button, "clicked", G_CALLBACK(on_buttons_numbers), entry);
+        }
+    }
+
+    gtk_widget_show_all(window);
 }
