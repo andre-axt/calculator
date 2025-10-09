@@ -2,6 +2,7 @@
 #include "operations.h"
 #include "string.h"
 #include <stdlib.h>
+#include <ctype.h>
 
 void on_buttons_numbers(GtkWidget *widget, gpointer data){
     GtkEntry *entry = GTK_ENTRY(data);
@@ -29,51 +30,78 @@ void on_button_clear(GtkWidget *widget, gpointer data){
     gtk_entry_set_text(entry, "");
 }
 
+double evaluate_expression(const char *expr) {
+    char tokens[50][16]; 
+    int token_count = 0;
+    int i = 0, j = 0;
+    char current_token[16] = "";
+    while (expr[i] != '\0') {
+        if (isdigit(expr[i]) || expr[i] == '.') {
+            current_token[j++] = expr[i];
+        } else {
+            if (j > 0) {
+                current_token[j] = '\0';
+                strcpy(tokens[token_count++], current_token);
+                j = 0;
+            }
+            tokens[token_count][0] = expr[i];
+            tokens[token_count][1] = '\0';
+            token_count++;
+        }
+        i++;
+    }
+
+    if (j > 0) {
+        current_token[j] = '\0';
+        strcpy(tokens[token_count++], current_token);
+    }
+
+    for (int i = 0; i < token_count; i++) {
+        if (strcmp(tokens[i], "*") == 0 || strcmp(tokens[i], "/") == 0) {
+            double a = atof(tokens[i - 1]);
+            double b = atof(tokens[i + 1]);
+            double result;
+
+            if (strcmp(tokens[i], "*") == 0) {
+                result = mul(a, b);
+            } else {
+                result = divide(a, b);
+            }
+
+            sprintf(tokens[i - 1], "%.10f", result);
+
+            for (int j = i; j < token_count - 2; j++) {
+                strcpy(tokens[j], tokens[j + 2]);
+            }
+
+            token_count -= 2;
+            i--; 
+        }
+    }
+
+    double result = atof(tokens[0]);
+
+    for (int i = 1; i < token_count; i += 2) {
+        double next = atof(tokens[i + 1]);
+
+        if (strcmp(tokens[i], "+") == 0) {
+            result = add(result, next);
+        } else if (strcmp(tokens[i], "-") == 0) {
+            result = sub(result, next);
+        }
+    }
+
+    return result;
+}
+
 void on_button_equals(GtkWidget *widget, gpointer data){
     GtkEntry *entry = GTK_ENTRY(data);
     const gchar *current = gtk_entry_get_text(entry);
-    char op[4] = { '+', '-', '/', '*'};
-    int i;
-    
-    for(i = 0; i < 4; i++){
-        char x = op[i];
-        char *pos = strchr(current, x);
-        if(pos){
-            int op_index = pos - current;
-            char left[op_index + 1];
-            strncpy(left, current, op_index);
-            left[op_index] = '\0';
-            const char *right = pos + 1;
-            double a = atof(left);
-            double b = atof(right);
-            double result;
-            switch (x)
-            {
-            case '+':
-                result = add(a, b);
-                break;
-            
-            case '-':
-                result = sub(a, b);
-                break;
-            
-            case '/':
-                result = divide(a, b);
-                break;
-            
-            case '*':
-                result = mul(a, b);
-                break;
-            
-            default:
-                break;
-            }
-            char result_str[32];
-            sprintf(result_str, "%.2f", result);
-            gtk_entry_set_text(entry, result_str);
-            break;
-        }
-    }
+    double result = evaluate_expression(current);
+    char result_str[32];
+    sprintf(result_str, "%.2f", result);
+    gtk_entry_set_text(entry, result_str);
+
 }
 
 void activate(GtkApplication *app, gpointer user_data) {

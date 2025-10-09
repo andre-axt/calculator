@@ -7,7 +7,6 @@ void on_buttons_numbers(GtkWidget *widget, gpointer data);
 void on_buttons_operations(GtkWidget *widget, gpointer data);
 void on_button_equals(GtkWidget *widget, gpointer data);
 void on_button_clear(GtkWidget *widget, gpointer data);
-
-extern GtkWidget *entry;
+double evaluate_expression(const char *expr);
 
 #endif
