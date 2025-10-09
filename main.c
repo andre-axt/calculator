@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include "stdio.h"
 #include "operations.h"
+#include "interface.h"
 
 int main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
